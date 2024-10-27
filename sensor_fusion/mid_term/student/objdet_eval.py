@@ -13,7 +13,7 @@
 # general package imports
 import numpy as np
 import matplotlib
-matplotlib.use('wxagg') # change backend so that figure maximizing works on Mac as well     
+matplotlib.use('TkAgg') # change backend so that figure maximizing works on Mac as well
 import matplotlib.pyplot as plt
 
 import torch
@@ -64,7 +64,9 @@ def measure_detection_performance(detections, labels, labels_valid, min_iou=0.5)
                 ## step 5 : compute the intersection over union (IOU) between label and detection bounding-box
                 label_bbox_poly = Polygon(bbox_label)
                 det_bbox_poly = Polygon(bbox_det_object)
-                iou = (label_bbox_poly.intersection(det_bbox_poly).area) / (label_bbox_poly.union(det_bbox_poly).area) # intersection/union
+                intersection = label_bbox_poly.intersection(det_bbox_poly).area
+                union = label_bbox_poly.union(det_bbox_poly).area
+                iou = intersection / union
                 ## step 6 : if IOU exceeds min_iou threshold, store [iou,dist_x, dist_y, dist_z] in matches_lab_det and increase the TP count
                 if iou > min_iou:
                     matches_lab_det.append([iou,dist_x, dist_y, dist_z])

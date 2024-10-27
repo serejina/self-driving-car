@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # ---------------------------------------------------------------------
 # Project "Track 3D-Objects Over Time"
 # Copyright (C) 2020, Dr. Antje Muntzinger / Dr. Andreas Haja.
@@ -55,9 +56,10 @@ def show_pcl(pcl):
 
     # step 2 : create instance of open3d point-cloud class
     point_cloud = o3d.geometry.PointCloud()
-
+    print("ID_S1_EX2 END")
     # step 3 : set points in pcd instance by converting the point-cloud into 3d vectors (using open3d function Vector3dVector)
     point_cloud.points = o3d.utility.Vector3dVector(pcl[:, :3])
+
 
     # step 4 : for the first frame, add the pcd instance to visualization using add_geometry; for all other frames, use update_geometry instead
     vis.add_geometry(point_cloud)
@@ -103,9 +105,9 @@ def show_range_image(frame, lidar_name):
     img_range_intensity = img_range_intensity.astype(np.uint8)
 
     # Crop range image to +/- 90 deg. left and right of the forward-facing x-axis
-    deg_90 = int(img_range_intensity.shape[1] / 4)
-    ri_center = int(0.5*img_range_intensity.shape[1])
-    img_range_intensity = img_range_intensity[:,ri_center-deg_90:ri_center+deg_90]
+    deg90 = int(img_range_intensity.shape[1] / 4)
+    ri_center = int(img_range_intensity.shape[1]/2)
+    img_range_intensity = img_range_intensity[:,ri_center-deg90:ri_center+deg90]
 
     ####### ID_S1_EX1 END #######     
     
@@ -164,7 +166,7 @@ def bev_from_pcl(lidar_pcl, configs):
     ## step 4 : assign the intensity value of each unique entry in lidar_top_pcl to the intensity map 
     ##          make sure that the intensity is scaled in such a way that objects of interest (e.g. vehicles) are clearly visible    
     ##          also, make sure that the influence of outliers is mitigated by normalizing intensity on the difference between the max. and min. value within the point cloud
-    norm =  (np.amax(lidar_pcl_top[:, 3])-np.amin(lidar_pcl_top[:, 3])
+    norm = (np.amax(lidar_pcl_top[:, 3])-np.amin(lidar_pcl_top[:, 3]))
     intensity_map[np.int_(lidar_pcl_top[:, 0]), np.int_(lidar_pcl_top[:, 1])] = lidar_pcl_top[:, 3] / norm
 
     ## step 5 : temporarily visualize the intensity map using OpenCV to make sure that vehicles separate well from the background
@@ -194,13 +196,13 @@ def bev_from_pcl(lidar_pcl, configs):
         np.abs(configs.lim_z[1] - configs.lim_z[0]))
 
     ## step 3 : temporarily visualize the intensity map using OpenCV to make sure that vehicles separate well from the background
-    img_height = height_map * 256
-    img_height = img_height.astype(np.uint8)
-    while (1):
-        cv2.imshow('img_height', img_height)
-        if cv2.waitKey(10) & 0xFF == 27:
-            break
-    cv2.destroyAllWindows()
+    # img_height = height_map * 256
+    # img_height = img_height.astype(np.uint8)
+    # while (1):
+    #     cv2.imshow('img_height', img_height)
+    #     if cv2.waitKey(10) & 0xFF == 27:
+    #         break
+    # cv2.destroyAllWindows()
 
     #######
     ####### ID_S2_EX3 END #######
