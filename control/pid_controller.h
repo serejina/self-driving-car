@@ -72,5 +72,3 @@ private:
 };
 
 #endif //PID_CONTROLLER_H
-
-
