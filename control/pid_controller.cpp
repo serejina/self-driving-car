@@ -4,71 +4,69 @@
  *      Author: Mathilde Badoual
  **********************************************/
 
-#ifndef PID_CONTROLLER_H
-#define PID_CONTROLLER_H
+#include "pid_controller.h"
+#include <vector>
+#include <iostream>
+#include <math.h>
 
-class PID {
-public:
+using namespace std;
 
-   /**
-   * TODO: Create the PID class
-   **/
-
-    /*
-    * Constructor
-    */
-    PID();
-
-    /*
-    * Destructor.
-    */
-    virtual ~PID();
-
-    /*
-    * Initialize PID.
-    */
-    void Init(double Kp, double Ki, double Kd, double output_lim_max, double output_lim_min);
-
-    /*
-    * Update the PID error variables given cross track error.
-    */
-    void UpdateError(double cte);
-
-    /*
-    * Calculate the total PID error.
-    */
-    double TotalError();
-  
-    /*
-    * Update the delta time.
-    */
-    double UpdateDeltaTime(double new_delta_time);
-
-private:
-    /*
-    * Errors
-    */
-    double p_error;
-    double d_error;
-    double i_error;
-
-    /*
-    * Coefficients
-    */
-    double p_k;
-    double d_k;
-    double i_k;
-
-    /*
-    * Output limits
-    */
-    double output_lim_max;
-    double output_lim_min;
-  
-    /*
-    * Delta time
-    */
-    double delta_time;
+namespace
+{
+   template <typename T>
+   T clamp(T value, T min_value, T max_value)
+   {
+    return (value < min_value) ? min_value : (value > max_value) ? max_value : value;
+   }
 };
 
-#endif //PID_CONTROLLER_H
+PID::PID() {}
+
+PID::~PID() {}
+
+void PID::Init(double Kpi, double Kii, double Kdi, double output_lim_maxi, double output_lim_mini) {
+   /**
+   * TODO: Initialize PID coefficients (and errors, if needed)
+   **/
+   this->p_error = 0.0;
+   this->d_error = 0.0;
+   this->i_error = 0.0;
+
+   this->p_k = Kpi;
+   this->d_k = Kdi;
+   this->i_k = Kii;
+
+   this->output_lim_max = output_lim_maxi;
+   this->output_lim_min = output_lim_mini;
+
+   this->delta_time = 0.0;
+}
+
+
+void PID::UpdateError(double cte) {
+   /**
+   * TODO: Update PID errors based on cte.
+   **/
+   this->p_error = cte;
+
+   this->d_error = this->delta_time > 0 ? (cte - this->p_error)/this->delta_time : 0.0;
+   
+   this->i_error += cte * this->delta_time;
+}
+
+double PID::TotalError() {
+   /**
+   * TODO: Calculate and return the total error
+    * The code should return a value in the interval [output_lim_mini, output_lim_maxi]
+   */
+    double control = (this->p_k * this->p_error) + (this->d_k * this->d_error) + (this->i_k * this->i_error);
+    return clamp(control, this->output_lim_min, this->output_lim_max);
+}
+
+double PID::UpdateDeltaTime(double new_delta_time) {
+   /**
+   * TODO: Update the delta time with new value
+   */
+   this->delta_time = new_delta_time;
+   return this->delta_time;
+}
