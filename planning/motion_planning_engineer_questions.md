@@ -99,62 +99,112 @@ Constraints:
 - The algorithm can be adapted to consider obstacles by checking for collisions during the extension step.
 
 ## Code
-```python
-import numpy as np
-import matplotlib.pyplot as plt
+```cpp
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <cstdlib>
+#include <ctime>
+#include <limits>
 
-class RRT:
-    def __init__(self, start, goal, map_limits, step_size, max_iterations):
-        self.start = np.array(start)
-        self.goal = np.array(goal)
-        self.map_limits = map_limits
-        self.step_size = step_size
-        self.max_iterations = max_iterations
-        self.tree = [self.start]  # Tree starts with the root
+namespace{
+struct Point {
+    double x, y;
 
-    def distance(self, p1, p2):
-        return np.linalg.norm(np.array(p1) - np.array(p2))
+    Point(double x = 0.0, double y = 0.0) : x(x), y(y) {}
+};
+}
 
-    def nearest_node(self, sample):
-        distances = [self.distance(node, sample) for node in self.tree]
-        nearest_index = np.argmin(distances)
-        return self.tree[nearest_index]
+class RRT {
+private:
+    Point start, goal;
+    std::vector<Point> tree;
+    std::pair<Point, Point> map_limits;
+    double step_size;
+    int max_iterations;
 
-    def steer(self, from_node, to_node):
-        direction = np.array(to_node) - np.array(from_node)
-        distance = np.linalg.norm(direction)
-        if distance > self.step_size:
-            direction = direction / distance * self.step_size
-        return from_node + direction
+    // Calculate the Euclidean distance between two points
+    double distance(const Point& p1, const Point& p2) {
+        return std::sqrt(std::pow(p2.x - p1.x, 2) + std::pow(p2.y - p1.y, 2));
+    }
 
-    def plan(self):
-        for _ in range(self.max_iterations):
-            # Sample a random point
-            random_sample = np.random.uniform(
-                self.map_limits[0], self.map_limits[1], size=2
-            )
-            # Find the nearest node in the tree
-            nearest_node = self.nearest_node(random_sample)
-            # Steer towards the sample point
-            new_node = self.steer(nearest_node, random_sample)
-            self.tree.append(new_node)
-            # Check if the goal is reached
-            if self.distance(new_node, self.goal) <= self.step_size:
-                self.tree.append(self.goal)
-                return self.tree
-        print("Max iterations reached without finding a path.")
-        return self.tree
+    // Find the nearest node in the tree to a given point
+    Point nearestNode(const Point& sample) {
+        double min_dist = std::numeric_limits<double>::max();
+        Point nearest;
+        for (const auto& node : tree) {
+            double dist = distance(node, sample);
+            if (dist < min_dist) {
+                min_dist = dist;
+                nearest = node;
+            }
+        }
+        return nearest;
+    }
 
-# Define parameters
-start = (0, 0)
-goal = (8, 8)
-map_limits = [(-1, -1), (10, 10)]  # (min, max) for x and y
-step_size = 0.5
-max_iterations = 1000
+    // Steer from one point to another, limited by the step size
+    Point steer(const Point& from_node, const Point& to_node) {
+        double direction_x = to_node.x - from_node.x;
+        double direction_y = to_node.y - from_node.y;
+        double dist = std::sqrt(direction_x * direction_x + direction_y * direction_y);
+        
+        if (dist > step_size) {
+            direction_x = direction_x / dist * step_size;
+            direction_y = direction_y / dist * step_size;
+        }
 
-# Create and run RRT
-rrt = RRT(start, goal, map_limits, step_size, max_iterations)
-tree = rrt.plan()
+        return Point(from_node.x + direction_x, from_node.y + direction_y);
+    }
+
+public:
+    RRT(const Point& start, const Point& goal, const std::pair<Point, Point>& map_limits,
+        double step_size, int max_iterations)
+        : start(start), goal(goal), map_limits(map_limits), step_size(step_size), max_iterations(max_iterations) {
+        tree.push_back(start);
+    }
+
+    // Main RRT planning algorithm
+    std::vector<Point> plan() {
+        srand(static_cast<unsigned>(time(0))); // Seed random number generator
+
+        for (int i = 0; i < max_iterations; ++i) {
+            // Sample a random point within the map limits
+            double random_x = map_limits.first.x + static_cast<double>(rand()) / RAND_MAX * 
+                              (map_limits.second.x - map_limits.first.x);
+            double random_y = map_limits.first.y + static_cast<double>(rand()) / RAND_MAX * 
+                              (map_limits.second.y - map_limits.first.y);
+            Point random_sample(random_x, random_y);
+
+            // Find the nearest node in the tree
+            Point nearest_node = nearestNode(random_sample);
+
+            // Steer towards the random sample
+            Point new_node = steer(nearest_node, random_sample);
+
+            // Add the new node to the tree
+            tree.push_back(new_node);
+
+            // Check if the goal is reached
+            if (distance(new_node, goal) <= step_size) {
+                tree.push_back(goal);
+                return tree;
+            }
+        }
+
+        std::cout << "Max iterations reached without finding a path." << std::endl;
+        return tree;
+    }
+};
+
+// main
+// Point start(0, 0);
+// Point goal(8, 8);
+// std::pair<Point, Point> map_limits(Point(-1, -1), Point(10, 10));
+// double step_size = 0.5;
+// int max_iterations = 1000;
+
+// RRT rrt(start, goal, map_limits, step_size, max_iterations);
+// std::vector<Point> tree = rrt.plan();
 ```
 To otmaze the path RRT* can be used.
 ![desired-trajectory](./imgs/q3.png)
